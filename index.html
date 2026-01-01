@@ -1,265 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8" />
+<title>Ratan Panel - Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WiFi Hack Simulator (PRANK)</title>
-
 <style>
-:root{
-  --neon:#00ff9d;
-  --blue:#00c8ff;
-  --pink:#ff3df0;
+body {
+    margin: 0;
+    background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
+    color: white;
+    font-family: Arial, sans-serif;
+    display:flex; align-items:center; justify-content:center; height:100vh;
 }
-*{box-sizing:border-box}
-body{
-  margin:0;
-  background:radial-gradient(1200px 600px at 10% 10%, #07151f, #020406);
-  color:#cfefff;
-  font-family: ui-monospace, Consolas, monospace;
-  min-height:100vh;
-  overflow:hidden;
+.login-box {
+    background:#111; padding:30px; border-radius:12px; box-shadow:0 0 20px #00eaff;
+    text-align:center; width:90%; max-width:400px;
 }
-.particles{position:fixed; inset:0; pointer-events:none}
-.p{
-  position:absolute;width:2px;height:2px;
-  background:var(--neon);opacity:.8;
-  animation:float 10s linear infinite
+.login-box h2 { margin-bottom:20px; color:#00eaff; text-shadow:0 0 8px #00eaff; }
+.login-box input {
+    width:100%; padding:12px; margin:10px 0; border:none; border-radius:8px; background:#222; color:#00eaff;
 }
-@keyframes float{
-  from{transform:translateY(110vh)}
-  to{transform:translateY(-10vh)}
+.login-box button {
+    width:100%; padding:12px; border:none; border-radius:8px; background:#00eaff; color:#000; font-weight:bold; cursor:pointer;
 }
-.wrap{max-width:900px;margin:auto;padding:24px;position:relative;z-index:2}
-.card{
-  background:linear-gradient(180deg,rgba(10,20,30,.9),rgba(5,10,15,.9));
-  border:1px solid rgba(0,200,255,.25);
-  border-radius:18px;
-  padding:18px;
-}
-.header{display:flex;gap:12px;align-items:center}
-.logo{
-  width:48px;height:48px;border-radius:12px;
-  background:#000 url('ratan.png') center/cover no-repeat;
-  box-shadow:0 0 18px var(--pink)
-}
-.title{font-size:22px;color:var(--neon)}
-.badge{margin-left:auto;font-size:12px;color:var(--pink)}
-.input{display:flex;gap:10px;margin:16px 0}
-input{
-  flex:1;background:#02080e;color:#cfefff;
-  border:1px solid rgba(0,200,255,.35);
-  border-radius:12px;padding:12px
-}
-button{
-  background:linear-gradient(90deg,var(--neon),var(--blue));
-  border:none;border-radius:12px;
-  padding:12px 16px;font-weight:700;cursor:pointer
-}
-button:disabled{opacity:.6}
-.term{
-  background:#010407;
-  height:340px;
-  overflow-y:auto;
-  padding:14px;
-  border-radius:14px;
-}
-.line{white-space:pre-wrap}
-.ok{color:#7cff7c}
-.warn{color:#ffd27c}
-.err{color:#ff7c7c}
-.glow{text-shadow:0 0 8px currentColor}
+.login-box button:hover { background:#00ddff; }
+#error { color:red; margin-top:10px; }
 </style>
 </head>
-
 <body>
 
-<div class="particles" id="particles"></div>
-
-<div class="wrap">
-<div class="card">
-
-<div class="header">
-  <div class="logo"></div>
-  <div class="title">WiFi Hack Simulator (PRANK)</div>
-  <div class="badge">FAKE • DEMO</div>
+<div class="login-box">
+    <h2>🎮 wifi hack PANEL </h2>
+    <input id="loginUser" placeholder="Username">
+    <input id="loginPass" type="password" placeholder="Password">
+    <button onclick="doLogin()">লগইন করুন</button>
+    <div id="error"></div>
 </div>
 
-<div class="input">
-  <input id="ssid" placeholder="Enter your WiFi name (SSID)">
-  <button id="start">Start Hack</button>
-</div>
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-<div class="term" id="term"></div>
+const firebaseConfig = {
+  apiKey: "AIzaSyBOcA7LyCU-zNlVj13DQcZKD-ImdD7paOI",
+  authDomain: "balh-1d419.firebaseapp.com",
+  databaseURL: "https://balh-1d419-default-rtdb.firebaseio.com",
+  projectId: "balh-1d419",
+  storageBucket: "balh-1d419.firebasestorage.app",
+  messagingSenderId: "1036597182312",
+  appId: "1:1036597182312:web:749f9d6c30f200720f60dd",
+  measurementId: "G-S2LZZ28SYN"
+};
 
-</div>
-</div>
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-<script>
-// particles
-const pWrap=document.getElementById('particles');
-for(let i=0;i<120;i++){
-  const d=document.createElement('div');
-  d.className='p';
-  d.style.left=Math.random()*100+'%';
-  d.style.animationDuration=(6+Math.random()*10)+'s';
-  pWrap.appendChild(d);
-}
+function genSession(){ return Math.random().toString(36).substring(2)+Date.now().toString(36); }
 
-const term=document.getElementById('term');
-const btn=document.getElementById('start');
-const ssidInput=document.getElementById('ssid');
+window.doLogin = async function(){
+    const username = document.getElementById('loginUser').value.trim();
+    const password = document.getElementById('loginPass').value.trim();
+    const errorDiv = document.getElementById('error');
+    errorDiv.innerText = '';
 
-// 🔊 sound
-function sound(type='type'){
-  try{
-    const c=new(AudioContext||webkitAudioContext)();
-    const o=c.createOscillator();
-    const g=c.createGain();
-    if(type==='error') o.frequency.value=220;
-    else if(type==='success') o.frequency.value=1300;
-    else o.frequency.value=900;
-    g.gain.value=0.04;
-    o.connect(g); g.connect(c.destination);
-    o.start();
-    setTimeout(()=>{o.stop();c.close()}, type==='error'?200:60);
-  }catch(e){}
-}
+    if(!username || !password){ errorDiv.innerText="সব তথ্য পূরণ করুন"; return; }
 
-// 📱 vibration
-function vibrate(p){
-  if(navigator.vibrate) navigator.vibrate(p);
-}
+    const snap = await get(ref(db,'users'));
+    if(!snap.exists()){ errorDiv.innerText="কোনো ব্যবহারকারী পাওয়া যায়নি"; return; }
+    const users = snap.val();
 
-// ⌨️ typing
-function typeLine(text,cls='',speed=28){
-  return new Promise(res=>{
-    const d=document.createElement('div');
-    d.className='line '+cls;
-    term.appendChild(d);
-    let i=0;
-    const iv=setInterval(()=>{
-      if(i>=text.length){clearInterval(iv);res();return;}
-      d.textContent+=text[i++];
-      sound();
-      term.scrollTop=term.scrollHeight;
-    },speed);
-  });
-}
+    let foundId = null, foundUser = null;
+    for(const id in users){ 
+        if(users[id].username===username && users[id].password===password){
+            foundId = id; foundUser = users[id]; break;
+        }
+    }
 
-// 🌐 fake IP
-async function showIP(){
-  const ip=Array.from({length:4},()=>Math.floor(Math.random()*255)).join('.');
-  const d=document.createElement('div');
-  d.className='line glow';
-  term.appendChild(d);
-  let t='';
-  for(const c of ip){
-    t+=c;
-    d.textContent='> Target IP: '+t;
-    sound();
-    await new Promise(r=>setTimeout(r,80));
-  }
-}
+    if(!foundId){ errorDiv.innerText="ভুল নাম/পাসওয়ার্ড"; return; }
 
-btn.onclick=async()=>{
-  term.innerHTML='';
-  const ssid=ssidInput.value.trim();
+    // Session generate & save
+    const sessionId = genSession();
+    await update(ref(db,'users/'+foundId),{ activeSession: sessionId });
+    localStorage.setItem('ratan_userid', foundId);
+    localStorage.setItem('ratan_session', sessionId);
 
-  if(!ssid){
-    await typeLine('> ERROR: SSID required','err glow');
-    sound('error');
-    return;
-  }
-
-  // ❌ OTHER WIFI NAME → FAKE DEVELOPER TRACE
-  if(ssid!=='Mmmm'){
-    btn.disabled=true;
-
-    await typeLine(`> Target SSID: ${ssid}`,'warn glow');
-    await typeLine('> Scanning network...');
-    await typeLine('> Checking permissions...');
-    await typeLine('> Verifying license...');
-    await typeLine('> WARNING: Unauthorized SSID','err glow');
-    vibrate(300);
-
-    await typeLine('> Tracing developer identity...');
-    await typeLine('> Facebook profile detected','ok glow');
-    await typeLine('> Developer: RATAN MAJUMDER','ok glow');
-
-    const link=document.createElement('div');
-    link.className='line ok glow';
-    link.innerHTML =
-      `> <button onclick="window.open('https://www.facebook.com/profile.php?id=61552305287329','_blank')">
-         Contact Developer
-       </button>`;
-    term.appendChild(link);
-
-    btn.disabled=false;
-    return;
-  }
-
-  // ✅ Mmmm → FULL HACK FLOW
-  btn.disabled=true;
-
-  await typeLine(`> Target SSID: ${ssid}`,'ok glow');
-  await typeLine('> Initializing core modules...');
-  await typeLine('> Allocating memory buffers...');
-  await typeLine('> Syncing drivers...');
-  await typeLine('> Loading packets █▒▒▒▒▒▒▒▒▒');
-  await typeLine('> Loading packets ███▒▒▒▒▒▒▒');
-  await typeLine('> Loading packets █████▒▒▒▒▒');
-  await typeLine('> Loading packets ███████▒▒▒');
-  await typeLine('> Loading packets ██████████');
-  await typeLine('> Brute-force engine: ONLINE','glow');
-
-  await showIP();
-
-  await typeLine('> ERROR: Handshake failed','err glow');
-  sound('error'); vibrate(300);
-  await typeLine('> RETRYING...','warn glow');
-  await typeLine('> SUCCESS: Handshake captured','ok glow');
-  sound('success'); vibrate([100,50,100,50,200]);
-
-  const final=[
-    '> Capturing handshake [1/5]',
-    '> Capturing handshake [2/5]',
-    '> Capturing handshake [3/5]',
-    '> Capturing handshake [4/5]',
-    '> Capturing handshake [5/5]',
-    '> Cracking keyspace...',
-    '> Testing wordlists...',
-    '> Refining entropy...',
-    '> Decrypting blocks...',
-    '> Verifying checksum...',
-    '> Almost there...',
-    '> Success!',
-    '> ^^^^^^^^^^^^^^^^^^^^^^^',
-    '> ^^^^^^^^^^^^^^^^^^^^^^^',
-    '> CONECTED 2 CAMERA',
-    '> ip 1 12.25.852.14.',
-    '> ip 2 45.252.36.55.',
-    '> CONECTED 2 device',
-    '> CONECTED 2 device',
-    
-    '',
-    'Scanned Data',
-    'SSID: Mmmm',
-    'Password: oooopppp',
-    'Network Type: WPA',
-    'Hidden: No',
-    '> 🔥 RATAN MAJUMDER ALWAYS TOP 🔥'
-    '> 🔥 mobile: 01609166109 🔥'
-    '> 🔥 wifi: XUD LINK PONK 🔥'
-    '> 🔥 ENJOY BRO 🔥'
-  ];
-
-  for(const l of final){
-    await new Promise(r=>setTimeout(r,500));
-    await typeLine(l,'ok glow');
-  }
-
-  btn.disabled=false;
+    // Redirect to Panel page
+    window.location.href = "index1.html";
 };
 </script>
 
